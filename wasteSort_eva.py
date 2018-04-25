@@ -8,8 +8,6 @@ from torch.autograd import Variable
 # import torchvision
 from torchvision import transforms, datasets
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')
 import time
 import os
 import copy
@@ -24,7 +22,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
-    best_result = [0.0]
+    best_result = [0.0, 0.0]
     rec_loss = []
     rec_acc = []
     rec_prc = []
@@ -83,7 +81,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
             # deep copy the model
             if phase == 'val' and epoch_acc > best_result[1]:
                 best_model_wts = copy.deepcopy(model.state_dict())
-                best_result = [epoch_acc, epoch_prc, epoch_rec, epoch_f1]
+                best_result = [epoch_loss, epoch_acc, epoch_prc, epoch_rec, epoch_f1]
 
             # recording
             rec_loss += [epoch_loss]
@@ -101,7 +99,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
     print('Best val Acc: {:4f}'.format(best_result[0]))
     for it in range(len(class_names)):
         print('{}: Precision = {:.4f}, Recall = {:.4f}, F1 measure = {:.4f}'.format(
-            class_names[it], best_result[1][it], best_result[2][it], best_result[3][it]))
+            class_names[it], best_result[2][it], best_result[3][it], best_result[4][it]))
 
     loss_train = rec_loss[::2]
     loss_val = rec_loss[1::2]
@@ -143,9 +141,9 @@ if __name__ == '__main__':
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
     }
-    # data_dir = 'dataset-resized'
+    data_dir = 'dataset-resized'
     # data_dir = 'dataset-large'
-    data_dir = 'dataset-debug'
+    # data_dir = 'dataset-debug'
 
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                               data_transforms[x])
@@ -154,7 +152,7 @@ if __name__ == '__main__':
     #                                           data_transforms[x])
     #                   for x in ['train', 'val']}
 
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4,
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=16,
                                                   shuffle=True, num_workers=4)
                    for x in ['train', 'val']}
 
@@ -174,7 +172,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     # Observe that all parameters are being optimized
-    optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.008, momentum=0.9)
+    optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
 
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
@@ -189,6 +187,6 @@ if __name__ == '__main__':
         os.makedirs(result_dir)
     # image sample display
 
-    model_ft = train_model(model_ft, optimizer_ft, exp_lr_scheduler, num_epochs=2)
+    model_ft = train_model(model_ft, optimizer_ft, exp_lr_scheduler, num_epochs=25)
 
-    model_sample.visualization(model_ft, dataloaders, use_gpu, class_names, result_dir, pic_num=10)
+    model_sample.visualization(model_ft, dataloaders, use_gpu, class_names, result_dir, pic_num=8)
