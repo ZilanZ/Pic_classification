@@ -8,6 +8,8 @@ from torch.autograd import Variable
 # import torchvision
 from torchvision import transforms, datasets
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 import time
 import os
 import copy
